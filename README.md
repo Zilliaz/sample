@@ -6,6 +6,10 @@
 2. Build the bootloader by navigating to `tools`, and running `python bl_build.py`
 2. Run the bootloader by navigating to `tools`, and running `python bl_emulate.py`
 
+Bench🪑Flavor🍦Eau👃De💦Toilette🚽
+Bench Flavor (●'◡'●)☆: .｡. o(≧▽≦)o .｡.:☆(/ω＼)(^///^)╰(°▽°)╯
+BenchFlavor: eau de toilette
+
 ## Troubleshooting
 
 Ensure that BearSSL is compiled for the stellaris: `cd ~/lib/BearSSL && make CONF=../../stellaris/bearssl/stellaris clean && make CONF=../../stellaris/bearssl/stellaris`
