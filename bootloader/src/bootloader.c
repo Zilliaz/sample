@@ -220,6 +220,13 @@ void load_firmware(void){
         rcv = uart_read(UART1, BLOCKING, &read);
         frame_length += (int)rcv;
 
+
+        // decode here???
+        char AES_KEY[16] = AES_KEY;
+        
+
+
+
         // Get the number of bytes specified
         for (int i = 0; i < frame_length; ++i){
             data[data_index] = uart_read(UART1, BLOCKING, &read);
