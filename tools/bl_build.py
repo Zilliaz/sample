@@ -34,18 +34,10 @@ def copy_initial_firmware(binary_path: str):
 def make_bootloader() -> bool:
     # Build the bootloader from source.
 
-    
-    f = open("secret_build_output.txt", 'wb')
-    f.write(get_random_bytes(16))
-    key_areessay = RSA.generate(2048)
-    f.write(key_areessay.key('PEM'))
-    f.close()
     os.chdir(BOOTLOADER_DIR)
 
     subprocess.call("make clean", shell=True)
     status = subprocess.call("make")
-    status = subprocess.call(f'make AES_KEY={print_hex(Key)}', shell=True)
-    status = subprocess.call(f'make RSA_KEY={print_hex(Key)}', shell=True)
 
     # Return True if make returned 0, otherwise return False.
     return status == 0
