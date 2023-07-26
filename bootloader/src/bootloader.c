@@ -223,9 +223,9 @@ void load_firmware(void){
 
         // decode here???
         char AES_KEY[16] = AES_KEY;
+        char RSA_KEY[256] = RSA_KEY;
+
         
-
-
 
         // Get the number of bytes specified
         for (int i = 0; i < frame_length; ++i){
