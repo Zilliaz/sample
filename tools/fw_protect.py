@@ -15,12 +15,19 @@ def protect_firmware(infile, outfile, version, message):
     # Load firmware binary from infile
     with open(infile, 'rb') as fp:
         firmware = fp.read()
+    
+    #encrypto mavuloso
+    f = open("secret_build_output.txt")
+    key = f.read(16)
+    f.close()
+    cipher = AES.new(key, AES.MODE_CBC)
+    encrypted = cipher.encrypt(pad(firmware, AES.block_size))
 
     # Append null-terminated message to end of firmware
-    firmware_and_message = firmware + message.encode() + b'\00'
+    firmware_and_message = encrypted + message.encode() + b'\00'
 
     # Pack version and size into two little-endian shorts
-    metadata = struct.pack('<HH', version, len(firmware))
+    metadata = struct.pack('<HH', version, len(encrypted))
 
     # Append firmware and message to metadata
     firmware_blob = metadata + firmware_and_message

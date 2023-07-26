@@ -14,6 +14,11 @@ import os
 import pathlib
 import shutil
 import subprocess
+import json
+from base64 import b64encode
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+from Crypto.Random import get_random_bytes
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent.absolute()
 BOOTLOADER_DIR = os.path.join(REPO_ROOT, "bootloader")
@@ -25,17 +30,26 @@ def copy_initial_firmware(binary_path: str):
     os.chdir(os.path.join(REPO_ROOT, "tools"))
     shutil.copy(binary_path, os.path.join(BOOTLOADER_DIR, "src/firmware.bin"))
 
+    
+
 
 def make_bootloader() -> bool:
     # Build the bootloader from source.
+
+    Key = get_random_bytes(16)
+    f = open("secret_build_output.txt")
+    f.write(Key)
+    f.close()
 
     os.chdir(BOOTLOADER_DIR)
 
     subprocess.call("make clean", shell=True)
     status = subprocess.call("make")
+    status = subprocess.call(f'make AES_KEY={print_hex(Key)}', shell=True)
 
     # Return True if make returned 0, otherwise return False.
     return status == 0
+
 
 
 if __name__ == "__main__":
