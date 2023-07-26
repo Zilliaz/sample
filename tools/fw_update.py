@@ -32,6 +32,7 @@ from util import *
 RESP_OK = b"\x00"
 FRAME_SIZE = 256
 
+# testing ; ^ ;
 
 def send_metadata(ser, metadata, debug=False):
     version, size = struct.unpack_from("<HH", metadata)
