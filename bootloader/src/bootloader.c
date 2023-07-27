@@ -19,6 +19,8 @@
 // Application Imports
 #include "uart.h"
 
+//
+#include "skeys.h"
 
 // Forward Declarations
 void load_initial_firmware(void);
@@ -225,58 +227,25 @@ void load_firmware(void){
         
 
 
-
-
+        // DECRYPTINGGGG
 
         // Get the number of bytes specified
         for (int i = 0; i < frame_length; ++i){
             data[data_index] = uart_read(UART1, BLOCKING, &read);
             data_index += 1;
+
+            // getting iv for AES from skeys.h
+
+            // verifying RSA signature
             
 
+            // decrypting RSA
 
-
-
-
-            // decode here???
-            char AES_KEY[16] = AES_KEY;
-            char RSA_KEY[256] = RSA_KEY;
-
-            FILE *fp;
-            
-            fp = fopen("skeys.h","rb");
-            unsigned char iv[16];
-            size_t ivdata = fread(iv, sizeof(unsigned char), sizeof(iv), fp);
-
-
-
-
-            //fscanf(fptr,"%d", &num);
-
-
-
-
-            uint8_t iv[16];
-
-            (RX, (uint8_t*)iv,16);
-            print_bytes(iv,16);
-            uint8_t size;
-            uint8_t cText[size];
-            
-            aes_decrypt(KEY, iv, cText, size);
-
-
-
-
-
-
-
-
-
-
-
+            // decrypting AES
+            aes_decrypt(AES_KEY, IV, data, 8);
 
         } // for
+
 
         // If we filed our page buffer, program it
         if (data_index == FLASH_PAGESIZE || frame_length == 0){
