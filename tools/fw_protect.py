@@ -10,6 +10,7 @@ Firmware Bundle-and-Protect Tool
 import argparse
 import struct
 
+
 def protect_firmware(infile, outfile, version, message):
     # Load firmware binary from infile
     with open(infile, 'rb') as fp:
@@ -37,19 +38,6 @@ def protect_firmware(infile, outfile, version, message):
         with open(outfile, 'wb+') as outfile:
             outfile.write(answer)
             outfile.write(signature)
-
-    # # Append null-terminated message to end of firmware
-    # firmware_and_message = firmware + message.encode() + b'\00'
-
-    # # Pack version and size into two little-endian shorts
-    # metadata = struct.pack('<HH', version, len(firmware))
-
-    # # Append firmware and message to metadata
-    # firmware_blob = metadata + firmware_and_message
-
-    # Write firmware blob to outfile
-    # with open(outfile, 'wb+') as outfile:
-    #     outfile.write(firmware_blob)
 
 
 if __name__ == '__main__':
