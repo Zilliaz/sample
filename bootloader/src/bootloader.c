@@ -19,7 +19,7 @@
 // Application Imports
 #include "uart.h"
 
-//
+// Header file
 #include "skeys.h"
 
 // Forward Declarations
@@ -232,19 +232,16 @@ void load_firmware(void){
         // Get the number of bytes specified
         for (int i = 0; i < frame_length; ++i){
             data[data_index] = uart_read(UART1, BLOCKING, &read);
-            data_index += 1;
-
-            // getting iv for AES from skeys.h
 
             // verifying RSA signature
             
-
             // decrypting RSA
 
             // decrypting AES
-            aes_decrypt(AES_KEY, IV, data, 8);
+            aes_decrypt(KEY_ARESSAY, IV, data[data_index], 8);
+            data_index += 1;
 
-        } // for
+        } 
 
 
         // If we filed our page buffer, program it
