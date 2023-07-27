@@ -15,6 +15,7 @@
 // Library Imports
 #include <string.h>
 #include <stdio.h>
+#include <bearssl.h>
 
 // Application Imports
 #include "uart.h"
@@ -224,8 +225,6 @@ void load_firmware(void){
         rcv = uart_read(UART1, BLOCKING, &read);
         frame_length += (int)rcv;
 
-        
-
 
         // DECRYPTINGGGG
 
@@ -235,7 +234,9 @@ void load_firmware(void){
 
             // verifying RSA signature
             
+
             // decrypting RSA
+
 
             // decrypting AES
             aes_decrypt(KEY_ARESSAY, IV, data[data_index], 8);

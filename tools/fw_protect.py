@@ -24,26 +24,27 @@ def protect_firmware(infile, outfile, version, message):
         firmware = fp.read()
 
     # encrypting it with AES and then RSA + signing
-    keysPlural = [] # 0 -> AES, 1 -> RSA
+    keysPlural = [] # 0 -> AES, 1 -> RSApublic
     with open('secret_build_output.txt', 'rb') as keyLAND:
         keysPlural = keyLAND.reads()
 
-    #generate iv
-    cipher = AES.new(keysPlural[0], AES.MODE_CBC)
-    iv = cipher.iv
+    # AES: generate iv
+    
 
     f = open('../bootloader/skeys.h', 'w') #
-    f.write("#ifndef SKEYS_H")
-    f.write("#define SKEYS_H")
     f.write("const uint8_t IV[16] = {")
     for i in range (15):
         f.write(iv[i])
         f.write(", ")
     f.write(iv[15])
     f.write("};")
+    f.write("\n")
     f.close()
 
     for chunk in [firmware[i:i + 252] for i in range(0, len(firmware), 252)]:
+        cipher = AES.new(keysPlural[0], AES.MODE_CBC)
+        iv = cipher.iv
+        
         if len(chunk) < 252:
             padded = pad(chunk, 252)
         else:

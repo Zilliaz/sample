@@ -37,11 +37,10 @@ def copy_initial_firmware(binary_path: str):
 def make_bootloader() -> bool:
     # Build the bootloader from source.
 
-# const uint8_t KEY_AYEEES[16];
-# const uint8_t KEY_ARESSAY[256];
-
     aesKEY = get_random_bytes(16)
     f = open("skeys.h", 'w')
+    f.write("#ifndef SKEYS_H")
+    f.write("#define SKEYS_H")
     # need to convert to bytes, add {}, etc.
     f.write("const uint8_t KEY_AYEEES[16] = {")
     for i in range(15):
@@ -52,7 +51,7 @@ def make_bootloader() -> bool:
     f.write("\n")
     
     key_areessay = RSA.generate(2048)
-    rkey = key_areessay.key('PEM')
+    rkey = key_areessay.public_key()
     # need to convert to bytes, add {}, etc.
     f.write("const uint8_t KEY_ARESSAY[256] = {")
     for i in range(255):
@@ -60,7 +59,14 @@ def make_bootloader() -> bool:
         f.write(", ")
     f.write(aesKEY[255])
     f.write("};")
+    f.write("\n")
     f.close()
+
+    # sending keys to secret_build_output.txt
+    q = open("secret_build_output", 'w') # does this need to be wb?
+    q.write(aesKEY)
+    q.write(rkey)
+    q.close()
 
     os.chdir(BOOTLOADER_DIR)
 
