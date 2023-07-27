@@ -233,18 +233,11 @@ void load_firmware(void){
         for (int i = 0; i < frame_length; ++i){
             data[data_index] = uart_read(UART1, BLOCKING, &read);
 
-            // verifying RSA signature
-            
-
-            // decrypting RSA
-
-
             // decrypting AES
             data[data_index] = aes_decrypt(AES_KEY, IV, data[data_index], 8);
             data_index += 1;
 
         } 
-
 
         // If we filed our page buffer, program it
         if (data_index == FLASH_PAGESIZE || frame_length == 0){

@@ -39,16 +39,6 @@ def make_bootloader() -> bool:
 
     aesKEY = get_random_bytes(16)
 
-    
-
-
-
-
-
-
-
-    
-
     # sending keys to secret_build_output.txt
     q = open("secret_build_output.txt", 'wb') # does this need to be wb?
     q.write(aesKEY)

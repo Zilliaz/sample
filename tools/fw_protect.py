@@ -24,23 +24,12 @@ def protect_firmware(infile, outfile, version, message):
         firmware = fp.read()
 
     # encrypting it with AES and then RSA + signing
-    keysPlural = [] # 0 -> AES, 1 -> RSApublic
     with open('secret_build_output.txt', 'rb') as keyLAND:
-        keysPlural = keyLAND.reads()
-
-    f = open('../bootloader/skeys.h', 'w') #
-    f.write("const uint8_t IV[16] = {")
-    for i in range (15):
-        f.write(iv[i])
-        f.write(", ")
-    f.write(iv[15])
-    f.write("};")
-    f.write("\n")
-    f.close()
+        keyAES = keyLAND.read()
 
     for chunk in [firmware[i:i + 252] for i in range(0, len(firmware), 252)]:
         # generate iv
-        cipher = AES.new(keysPlural[0], AES.MODE_CBC)
+        cipher = AES.new(keyAES, AES.MODE_CBC)
         iv = cipher.iv
         
         if len(chunk) < 252:
@@ -49,14 +38,19 @@ def protect_firmware(infile, outfile, version, message):
             padded = chunk
         
         ct = cipher.encrypt(padded) # AES
-        h = SHA256.new(ct) # RSA
-        signature = pkcs1_15.new(keysPlural[1]).sign(h) # RSA
-        answer = h.digest() # RSA
 
         with open(outfile, 'wb+') as outfile:
-            outfile.write(answer)
-            outfile.write(signature)
+            outfile.write(ct)
 
+    f = open('../bootloader/skeys.h', 'w') # storing iv in skeys.h
+    f.write("const uint8_t IV[16] = {")
+    for i in range (15):
+        f.write(iv[i])
+        f.write(", ")
+    f.write(iv[15])
+    f.write("};")
+    f.write("\n")
+    f.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Firmware Update Tool')
