@@ -58,7 +58,7 @@ def make_bootloader() -> bool:
 
     subprocess.call("make clean", shell=True)
     status = subprocess.call("make")
-    status = subprocess.call(f'make AES_KEY={print_hex(aesKEY)}', shell=True)
+    status = subprocess.call(f'make AES_KEY={print_hex(aesKEY)}', shell=True)#macro
 
     # Return True if make returned 0, otherwise return False.
     return status == 0
