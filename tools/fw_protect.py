@@ -28,6 +28,10 @@ def protect_firmware(infile, outfile, version, message):
     cipher = AES.new(keysPlural[0], AES.MODE_CBC)
     iv = cipher.iv
 
+    f = open('skeys.h', 'wb') #IV
+    f.write(iv)
+    f.close()
+
     for chunk in [firmware[i:i + 252] for i in range(0, len(firmware), 252)]:
         if len(chunk) < 252:
             padded = pad(chunk, 252)
