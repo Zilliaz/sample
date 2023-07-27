@@ -38,17 +38,36 @@ def make_bootloader() -> bool:
     # Build the bootloader from source.
 
     aesKEY = get_random_bytes(16)
+    byte_aesKEY = []
+    byte_aesKEY = [0 in range(16)]
 
     # sending keys to secret_build_output.txt
     q = open("secret_build_output.txt", 'wb') # does this need to be wb?
     q.write(aesKEY)
     q.close()
 
+    f = open('../bootloader/skeys.h', 'w') # storing aesKEY in skeys.h
+    f.write("#ifndef SKEYS_H")
+    f.write("\n")
+    f.write("#define SKEYS_H")
+    f.write("\n")
+    f.write("const uint8_t aesKEY[16] = {")
+    for i in range (15):
+        byte_aesKEY[i] = aesKEY[i].to_bytes(1, 'little')
+        f.write(str(byte_aesKEY[i]))
+        f.write(", ")
+        print(str(byte_aesKEY[i]))
+    byte_aesKEY[15] = aesKEY[15].to_bytes(1, 'little')
+    f.write(str(byte_aesKEY[15]))
+    f.write("};")
+    f.write("\n")
+    f.close()
+
     os.chdir(BOOTLOADER_DIR)
 
     subprocess.call("make clean", shell=True)
     status = subprocess.call("make")
-    status = subprocess.call(f'make AES_KEY={print_hex(aesKEY)}', shell=True)#macro
+    # status = subprocess.call(f'make AES_KEY={print_hex(aesKEY)}', shell=True)#macro
 
     # Return True if make returned 0, otherwise return False.
     return status == 0

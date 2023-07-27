@@ -30,7 +30,7 @@ def protect_firmware(infile, outfile, version, message):
     for chunk in [firmware[i:i + 252] for i in range(0, len(firmware), 252)]:
         # generate iv
         cipher = AES.new(keyAES, AES.MODE_CBC)
-        iv = cipher.iv
+        IV = cipher.iv
         
         if len(chunk) < 252:
             padded = pad(chunk, 252)
@@ -45,9 +45,9 @@ def protect_firmware(infile, outfile, version, message):
     f = open('../bootloader/skeys.h', 'w') # storing iv in skeys.h
     f.write("const uint8_t IV[16] = {")
     for i in range (15):
-        f.write(iv[i])
+        f.write(IV[i])
         f.write(", ")
-    f.write(iv[15])
+    f.write(IV[15])
     f.write("};")
     f.write("\n")
     f.close()

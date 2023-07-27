@@ -16,6 +16,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <bearssl.h>
+#include <beaverssl.h>
 
 // Application Imports
 #include "uart.h"
@@ -170,7 +171,7 @@ void load_firmware(void){
     int read = 0;
     uint32_t rcv = 0;
 
-    uint32_t data_index = 0;
+    
     uint32_t page_addr = FW_BASE;
     uint32_t version = 0;
     uint32_t size = 0;
@@ -217,7 +218,7 @@ void load_firmware(void){
     uart_write(UART1, OK); // Acknowledge the metadata.
 
     /* Loop here until you can get all your characters and stuff */
-    char AES_KEY[16] = AES_KEY;
+    // char aesKEY[16] = AES_KEY;
     while (1){
 
         // Get two bytes for the length.
@@ -231,13 +232,13 @@ void load_firmware(void){
 
         // Get the number of bytes specified
         for (int i = 0; i < frame_length; ++i){
-            data[data_index] = uart_read(UART1, BLOCKING, &read);
+            data[i] = uart_read(UART1, BLOCKING, &read);
 
             // decrypting AES
-            data[data_index] = aes_decrypt(AES_KEY, IV, data[data_index], 8);
-            data_index += 1;
-
+            aes_decrypt(aesKEY, IV, data[i], 8);
         } 
+
+        
 
         // If we filed our page buffer, program it
         if (data_index == FLASH_PAGESIZE || frame_length == 0){
