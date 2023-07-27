@@ -217,6 +217,7 @@ void load_firmware(void){
     uart_write(UART1, OK); // Acknowledge the metadata.
 
     /* Loop here until you can get all your characters and stuff */
+    char AES_KEY[16] = AES_KEY;
     while (1){
 
         // Get two bytes for the length.
@@ -239,7 +240,7 @@ void load_firmware(void){
 
 
             // decrypting AES
-            aes_decrypt(KEY_ARESSAY, IV, data[data_index], 8);
+            data[data_index] = aes_decrypt(AES_KEY, IV, data[data_index], 8);
             data_index += 1;
 
         } 
