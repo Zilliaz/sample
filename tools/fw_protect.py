@@ -13,6 +13,7 @@ import json
 from base64 import b64decode
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
+from Crypto.Util.Padding import pad
 
 def protect_firmware(infile, outfile, version, message):
     # Load firmware binary from infile
