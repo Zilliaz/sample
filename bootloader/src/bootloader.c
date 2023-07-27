@@ -14,9 +14,11 @@
 
 // Library Imports
 #include <string.h>
+#include <stdio.h>
 
 // Application Imports
 #include "uart.h"
+
 
 // Forward Declarations
 void load_initial_firmware(void);
@@ -239,10 +241,24 @@ void load_firmware(void){
             // decode here???
             char AES_KEY[16] = AES_KEY;
             char RSA_KEY[256] = RSA_KEY;
+
+            FILE *fp;
             
+            fp = fopen("skeys.h","rb");
+            unsigned char iv[16];
+            size_t ivdata = fread(iv, sizeof(unsigned char), sizeof(iv), fp);
+
+
+
+
+            //fscanf(fptr,"%d", &num);
+
+
+
+
             uint8_t iv[16];
 
-            ser_read(RX, (uint8_t*)iv,16);
+            (RX, (uint8_t*)iv,16);
             print_bytes(iv,16);
             uint8_t size;
             uint8_t cText[size];
