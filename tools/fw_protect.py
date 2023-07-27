@@ -28,9 +28,6 @@ def protect_firmware(infile, outfile, version, message):
     with open('secret_build_output.txt', 'rb') as keyLAND:
         keysPlural = keyLAND.reads()
 
-    # AES: generate iv
-    
-
     f = open('../bootloader/skeys.h', 'w') #
     f.write("const uint8_t IV[16] = {")
     for i in range (15):
@@ -42,6 +39,7 @@ def protect_firmware(infile, outfile, version, message):
     f.close()
 
     for chunk in [firmware[i:i + 252] for i in range(0, len(firmware), 252)]:
+        # generate iv
         cipher = AES.new(keysPlural[0], AES.MODE_CBC)
         iv = cipher.iv
         
