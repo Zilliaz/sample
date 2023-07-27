@@ -9,10 +9,6 @@ Firmware Bundle-and-Protect Tool
 """
 import argparse
 import struct
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-from pwn import *
-
 
 def protect_firmware(infile, outfile, version, message):
     # Load firmware binary from infile
