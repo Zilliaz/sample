@@ -220,17 +220,46 @@ void load_firmware(void){
         rcv = uart_read(UART1, BLOCKING, &read);
         frame_length += (int)rcv;
 
-
-        // decode here???
-        char AES_KEY[16] = AES_KEY;
-        char RSA_KEY[256] = RSA_KEY;
-
         
+
+
+
+
 
         // Get the number of bytes specified
         for (int i = 0; i < frame_length; ++i){
             data[data_index] = uart_read(UART1, BLOCKING, &read);
             data_index += 1;
+            
+
+
+
+
+
+            // decode here???
+            char AES_KEY[16] = AES_KEY;
+            char RSA_KEY[256] = RSA_KEY;
+            
+            uint8_t iv[16];
+
+            ser_read(RX, (uint8_t*)iv,16);
+            print_bytes(iv,16);
+            uint8_t size;
+            uint8_t cText[size];
+            
+            aes_decrypt(KEY, iv, cText, size);
+
+
+
+
+
+
+
+
+
+
+
+
         } // for
 
         // If we filed our page buffer, program it

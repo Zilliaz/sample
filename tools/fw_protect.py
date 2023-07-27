@@ -9,6 +9,10 @@ Firmware Bundle-and-Protect Tool
 """
 import argparse
 import struct
+import json
+from base64 import b64decode
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
 
 def protect_firmware(infile, outfile, version, message):
     # Load firmware binary from infile
