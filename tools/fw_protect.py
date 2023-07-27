@@ -13,7 +13,6 @@ import json
 from base64 import b64decode
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
-from Crypto.Util.Padding import pad
 
 def protect_firmware(infile, outfile, version, message):
     # Load firmware binary from infile
@@ -25,9 +24,14 @@ def protect_firmware(infile, outfile, version, message):
     with open('secret_build_output.txt', 'rb') as keyLAND:
         keysPlural = keyLAND.reads()
 
+    #generate iv
     cipher = AES.new(keysPlural[0], AES.MODE_CBC)
     iv = cipher.iv
 
+    # write iv to header
+    with open('skeys.h', 'wb') as headerfile:
+        file.write(iv)
+        
     for chunk in [firmware[i:i + 252] for i in range(0, len(firmware), 252)]:
         if len(chunk) < 252:
             padded = pad(chunk, 252)
