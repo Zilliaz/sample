@@ -171,7 +171,7 @@ void load_firmware(void){
     int read = 0;
     uint32_t rcv = 0;
 
-    
+    uint32_t data_index = 0;
     uint32_t page_addr = FW_BASE;
     uint32_t version = 0;
     uint32_t size = 0;
@@ -232,10 +232,11 @@ void load_firmware(void){
 
         // Get the number of bytes specified
         for (int i = 0; i < frame_length; ++i){
-            data[i] = uart_read(UART1, BLOCKING, &read);
+            data[data_index] = uart_read(UART1, BLOCKING, &read);
 
             // decrypting AES
             aes_decrypt(aesKEY, IV, data[i], 8);
+            data_index += 1;
         } 
 
         
