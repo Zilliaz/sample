@@ -218,7 +218,7 @@ void load_firmware(void){
     uart_write(UART1, OK); // Acknowledge the metadata.
 
     /* Loop here until you can get all your characters and stuff */
-    // char aesKEY[16] = AES_KEY;
+    char aesKEY[16];
     while (1){
 
         // Get two bytes for the length.
