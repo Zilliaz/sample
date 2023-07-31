@@ -31,7 +31,6 @@ def protect_firmware(infile, outfile, version, message):
     for chunk in [firmware[i:i + 16] for i in range(0, len(firmware), 16)]:
         # generate iv
         cipher = AES.new(keyAES, AES.MODE_CBC)
-
         IV = cipher.iv
         f = open('../bootloader/src/skeys.h', 'w') # storing iv in skeys.h
         f.write("#ifndef SKEYS_H")
@@ -53,13 +52,15 @@ def protect_firmware(infile, outfile, version, message):
         else:
             padded = chunk
         
-        ct += cipher.encrypt(padded) # AES
+        ct += cipher.encrypt(padded) # AESs
 
-    for chunk in [ct[i:i + 254] for i in range(0, len(ct), 254)]:
-        with open(outfile, 'wb+') as outfile:       
-            outfile.write("b\00\00\00\00") # should be metadata (4 bytes)
-            outfile.write("b\00\00") # should be length, 2 
-            outfile.write(chunk) # 238+16 bytes
+    k =  open(outfile, 'w+') 
+    k.write("aaaa") # should be metadata (4 bytes)
+    for chunk in [ct[i:i + 238] for i in range(0, len(ct), 238)]:      
+        k.write("aa") # should be length, 2 
+        k.write(str(IV)) # should be length 16
+        k.write(str(chunk)) # 238 bytes
+    k.close()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Firmware Update Tool')
