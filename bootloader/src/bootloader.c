@@ -231,14 +231,21 @@ void load_firmware(void){
         // DECRYPTINGGGG
 
         // Get the number of bytes specified
+        /*
         for (int i = 0; i < frame_length; ++i){
             data[data_index] = uart_read(UART1, BLOCKING, &read);
 
             // decrypting AES
-            aes_decrypt(aesKEY, (char*)IV, (char*)data[i], 8);
             data_index += 1;
-        } 
-
+        }*/
+        char temp[16];
+        for (int i = 0 ; i < 16; i++)
+        {
+            temp[i] = uart_read(UART1, BLOCKING, &read);
+            //aes_decrypt(aesKEY, (char*)IV, (char*)data[i], 8);
+            data_index++;
+        }
+        aes_decrypt(aesKEY, (char*)IV, (char*)temp, 8);
         
 
         // If we filed our page buffer, program it
