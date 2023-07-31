@@ -54,10 +54,12 @@ def protect_firmware(infile, outfile, version, message):
         
         ct += cipher.encrypt(padded) # AESs
 
+    metadata = struct.pack('<HH', version, len(firmware))
+
     k =  open(outfile, 'w+') 
-    k.write("aaaa") # should be metadata (4 bytes)
+    k.write(metadata) # should be metadata (4 bytes)
     for chunk in [ct[i:i + 238] for i in range(0, len(ct), 238)]:      
-        k.write("aa") # should be length, 2 
+        k.write("aa") # should be size, 2 
         k.write(str(IV)) # should be length 16
         k.write(str(chunk)) # 238 bytes
     k.close()
