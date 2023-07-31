@@ -50,7 +50,6 @@ def make_bootloader() -> bool:
     os.chdir(BOOTLOADER_DIR)
 
     subprocess.call("make clean", shell=True)
-    status = subprocess.call("make")
     status = subprocess.call(f'make AES_KEY={print_hex(aesKEY)}', shell=True)#macros
     
 
