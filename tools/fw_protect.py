@@ -27,30 +27,24 @@ def protect_firmware(infile, outfile, version, message):
     with open('secret_build_output.txt', 'rb') as keyLAND:
         keyAES = keyLAND.read()
 
-    for chunk in [firmware[i:i + 252] for i in range(0, len(firmware), 252)]:
+    
+    for chunk in [firmware[i:i + 238] for i in range(0, len(firmware), 238)]:
         # generate iv
         cipher = AES.new(keyAES, AES.MODE_CBC)
         IV = cipher.iv
         
-        if len(chunk) < 252:
-            padded = pad(chunk, 252)
+        if len(chunk) < 238:
+            padded = pad(chunk, 238)
         else:
             padded = chunk
         
         ct = cipher.encrypt(padded) # AES
 
-        with open(outfile, 'wb+') as outfile:
-            outfile.write(ct)
-
-    f = open('../bootloader/skeys.h', 'w') # storing iv in skeys.h
-    f.write("const uint8_t IV[16] = {")
-    for i in range (15):
-        f.write(IV[i])
-        f.write(", ")
-    f.write(IV[15])
-    f.write("};")
-    f.write("\n")
-    f.close()
+        with open(outfile, 'wb+') as outfile:       
+            outfile.write("b\00\00\00\00") # should be metadata (4 bytes)
+            outfile.write("b\00\00") # should be length, 2 bytes
+            outfile.write(IV) # 16 bytes
+            outfile.write(ct) # 238 bytes
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Firmware Update Tool')

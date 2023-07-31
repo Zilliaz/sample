@@ -81,7 +81,8 @@ def update(ser, infile, debug):
         firmware_blob = fp.read()
 
     metadata = firmware_blob[:4]
-    firmware = firmware_blob[4:]
+    iv = firmware_blob[4:20]
+    firmware = firmware_blob[20:]
 
     send_metadata(ser, metadata, debug=debug)
 
