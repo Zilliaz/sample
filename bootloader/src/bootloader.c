@@ -245,7 +245,7 @@ void load_firmware(void){
             //aes_decrypt(aesKEY, (char*)IV, (char*)data[i], 8);
             data_index++;
         }
-        aes_decrypt(aesKEY, (char*)IV, (char*)temp, 8);
+        aes_decrypt(aesKEY, (char*)IV, (char*)temp, 16);
         
 
         // If we filed our page buffer, program it
