@@ -46,11 +46,28 @@ def make_bootloader() -> bool:
     q.write(aesKEY)
     q.close()
 
+    cipher = AES.new(aesKEY, AES.MODE_CBC)
+    IV = cipher.iv
+    f = open('../bootloader/src/skeys.h', 'w') # storing iv in skeys.h
+    f.write("#ifndef SKEYS_H")
+    f.write("\n")
+    f.write("#define SECRETS_H")
+    f.write("\n")
+    f.write("const uint8_t IV[16] = {")
+    for i in range (15):
+        f.write(str(IV[i]))
+        f.write(", ")
+    f.write(str(IV[15]))
+    f.write("};")
+    f.write("\n")
+    f.write("#endif")
+    f.close()
+
     
     os.chdir(BOOTLOADER_DIR)
 
     subprocess.call("make clean", shell=True)
-    status = subprocess.call(f'make AES_KEY={print_hex(aesKEY)}', shell=True)#macros
+    status = subprocess.call(f'make AES_KEY={(aesKEY)}', shell=True)#macros
     
 
     # Return True if make returned 0, otherwise return False.

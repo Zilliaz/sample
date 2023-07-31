@@ -235,7 +235,7 @@ void load_firmware(void){
             data[data_index] = uart_read(UART1, BLOCKING, &read);
 
             // decrypting AES
-            aes_decrypt(aesKEY, IV, (char*)data[data_index], 8);
+            aes_decrypt(aesKEY, (char*)IV, (char*)data[i], 8);
             data_index += 1;
         } 
 
