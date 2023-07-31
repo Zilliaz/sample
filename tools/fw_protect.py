@@ -27,24 +27,39 @@ def protect_firmware(infile, outfile, version, message):
     with open('secret_build_output.txt', 'rb') as keyLAND:
         keyAES = keyLAND.read()
 
-    
-    for chunk in [firmware[i:i + 238] for i in range(0, len(firmware), 238)]:
+    ct = b""
+    for chunk in [firmware[i:i + 16] for i in range(0, len(firmware), 16)]:
         # generate iv
         cipher = AES.new(keyAES, AES.MODE_CBC)
+
         IV = cipher.iv
+        f = open('../bootloader/src/skeys.h', 'w') # storing iv in skeys.h
+        f.write("#ifndef SKEYS_H")
+        f.write("\n")
+        f.write("#define SECRETS_H")
+        f.write("\n")
+        f.write("const uint8_t IV[16] = {")
+        for i in range (15):
+            f.write(str(IV[i]))
+            f.write(", ")
+        f.write(str(IV[15]))
+        f.write("};")
+        f.write("\n")
+        f.write("#endif")
+        f.close()
         
-        if len(chunk) < 238:
-            padded = pad(chunk, 238)
+        if len(chunk) < 16:
+            padded = pad(chunk, 16)
         else:
             padded = chunk
         
-        ct = cipher.encrypt(padded) # AES
+        ct += cipher.encrypt(padded) # AES
 
+    for chunk in [ct[i:i + 254] for i in range(0, len(ct), 254)]:
         with open(outfile, 'wb+') as outfile:       
             outfile.write("b\00\00\00\00") # should be metadata (4 bytes)
-            outfile.write("b\00\00") # should be length, 2 bytes
-            outfile.write(IV) # 16 bytes
-            outfile.write(ct) # 238 bytes
+            outfile.write("b\00\00") # should be length, 2 
+            outfile.write(chunk) # 238+16 bytes
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Firmware Update Tool')
