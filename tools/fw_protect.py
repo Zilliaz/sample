@@ -19,7 +19,7 @@ from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 
 def protect_firmware(infile, outfile, version, message):
-    LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    #LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     
     # Load firmware binary from infile
     with open(infile, 'rb') as fp:
@@ -49,6 +49,7 @@ def protect_firmware(infile, outfile, version, message):
         f.write("};")
         f.write("\n")
         f.write("#endif")
+        f.write("\n")
         f.close()
         
         if len(chunk) < 16:
