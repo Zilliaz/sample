@@ -30,9 +30,8 @@ import socket
 from util import *
 
 RESP_OK = b"\x00"
-FRAME_SIZE = 258
+FRAME_SIZE = 256
 
-# testing ; ^ ;
 
 def send_metadata(ser, metadata, debug=False):
     version, size = struct.unpack_from("<HH", metadata)
@@ -60,8 +59,7 @@ def send_metadata(ser, metadata, debug=False):
 
 def send_frame(ser, frame, debug=False):
     ser.write(frame)  # Write the frame...
-    print(frame)
-    
+
     if debug:
         print_hex(frame)
 
@@ -82,11 +80,8 @@ def update(ser, infile, debug):
         firmware_blob = fp.read()
 
     metadata = firmware_blob[:4]
-    length_chunk = firmware_blob[4:6]
-    iv = firmware_blob[6:22]
-    firmware = firmware_blob[22:]
+    firmware = firmware_blob[4:]
 
-    time.sleep(0.1)
     send_metadata(ser, metadata, debug=debug)
 
     for idx, frame_start in enumerate(range(0, len(firmware), FRAME_SIZE)):
@@ -106,13 +101,9 @@ def update(ser, infile, debug):
 
     # Send a zero length payload to tell the bootlader to finish writing it's page.
     ser.write(struct.pack(">H", 0x0000))
-    print("I am still alive")
     resp = ser.read(1)  # Wait for an OK from the bootloader
-    print("Still living")
     if resp != RESP_OK:
-        print("Haven't killed me yet")
         raise RuntimeError("ERROR: Bootloader responded to zero length frame with {}".format(repr(resp)))
-        print("GAHHH")
     print(f"Wrote zero length frame (2 bytes)")
 
     return ser

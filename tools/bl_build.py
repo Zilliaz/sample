@@ -14,14 +14,6 @@ import os
 import pathlib
 import shutil
 import subprocess
-import json
-from base64 import b64encode
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
-from Crypto.Random import get_random_bytes
-from Crypto.Signature import pkcs1_15
-from Crypto.Hash import SHA256
-from Crypto.PublicKey import RSA
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent.absolute()
 BOOTLOADER_DIR = os.path.join(REPO_ROOT, "bootloader")
@@ -37,38 +29,10 @@ def copy_initial_firmware(binary_path: str):
 def make_bootloader() -> bool:
     # Build the bootloader from source.
 
-    aesKEY = get_random_bytes(16)
-    byte_aesKEY = []
-    byte_aesKEY = [0 in range(16)]
-
-    # sending keys to secret_build_output.txt
-    q = open("secret_build_output.txt", 'wb') # does this need to be wb?
-    q.write(aesKEY)
-    q.close()
-
-    # Don't actually need this; Only putting it in to avoid error
-    cipher = AES.new(aesKEY, AES.MODE_CBC)
-    IV = cipher.iv
-    f = open('../bootloader/src/skeys.h', 'w') # storing iv in skeys.h
-    f.write("#ifndef SKEYS_H")
-    f.write("\n")
-    f.write("#define SECRETS_H")
-    f.write("\n")
-    f.write("const uint8_t IV[16] = {")
-    for i in range (15):
-        f.write(str(IV[i]))
-        f.write(", ")
-    f.write(str(IV[15]))
-    f.write("};")
-    f.write("\n")
-    f.write("#endif")
-    f.close()
-    
     os.chdir(BOOTLOADER_DIR)
 
     subprocess.call("make clean", shell=True)
-    status = subprocess.call(f'make AES_KEY={(aesKEY)}', shell=True)#macros
-    
+    status = subprocess.call("make")
 
     # Return True if make returned 0, otherwise return False.
     return status == 0
