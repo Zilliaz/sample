@@ -54,14 +54,15 @@ def protect_firmware(infile, outfile, version, message):
         keyAES = keyLAND.read()
 
     ct = b""
-    ivy_length = len(firmware) / 16 + 1
+    ivy_length = int(len(firmware) / 16) + 1
     ivy = []
     ivy = [{} for i in range (ivy_length)]
+    indexing = 0
     for chunk in [firmware[i:i + 240] for i in range(0, len(firmware), 240)]:
         # generate iv
         cipher = AES.new(keyAES, AES.MODE_CBC)
         IV = cipher.iv
-        ivy[i] = IV
+        ivy[indexing] = IV
         # arrayize(IV)
 
         # pads last chunk to 240
@@ -73,16 +74,20 @@ def protect_firmware(infile, outfile, version, message):
         # actually encrypts each chunk, adds to ct
         ct += cipher.encrypt(padded) # AESs
 
+        indexing = indexing + 1
+
     metadata = struct.pack('<HH', version, len(firmware)) # Do we need to do len(ct) or len(firmware) for 'size'?
 
     # Writes frame to fw_update.py
     k = open(outfile, 'wb+')
     k.write(metadata) # should be metadata (version/size) [4 bytes]
+    indexing = 0
     for chunk in [ct[i:i + 240] for i in range(0, len(ct), 240)]: 
         placeholder = len(chunk) # length
         k.write(placeholder.to_bytes()) # writing over length [2 bytes] 
-        k.write(ivy[i]) # writing over IV [16 bytes]
+        k.write(ivy[indexing]) # writing over IV [16 bytes]
         k.write(chunk) # writing over ciphertext [240 bytes]
+        indexing = indexing + 1
     k.close()
 
 if __name__ == '__main__':
