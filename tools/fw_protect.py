@@ -19,16 +19,27 @@ from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 
 def protect_firmware(infile, outfile, version, message):
+    LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    
     # Load firmware binary from infile
     with open(infile, 'rb') as fp:
         firmware = fp.read()
+
+    #casear cypher
+    s = 4
+    for i in range(len(firmware)):
+        char = firmware[i]
+        if (char.isupper()):
+            julius += chr((ord(char) + s - 65) % 26 + 65)
+        else:
+            julius += chr((ord(char) + s - 97) % 26 + 97)
 
     # encrypting it with AES and then RSA + signing
     with open('secret_build_output.txt', 'rb') as keyLAND:
         keyAES = keyLAND.read()
 
     ct = b""
-    for chunk in [firmware[i:i + 16] for i in range(0, len(firmware), 16)]:
+    for chunk in [julius[i:i + 16] for i in range(0, len(julius), 16)]:
         # generate iv
         cipher = AES.new(keyAES, AES.MODE_CBC)
         IV = cipher.iv
@@ -54,7 +65,7 @@ def protect_firmware(infile, outfile, version, message):
         
         ct += cipher.encrypt(padded) # AESs
 
-    metadata = struct.pack('<HH', version, len(firmware))
+    metadata = struct.pack('<HH', version, len(julius))
 
     placeholder = len(chunk)
     k =  open(outfile, 'wb+') #:D 我很想死，我非常想死
