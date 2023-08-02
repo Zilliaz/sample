@@ -26,13 +26,19 @@ def protect_firmware(infile, outfile, version, message):
         firmware = fp.read()
 
     #casear cypher
-    s = 4
+    s = 26
+    julius = ""
+    # transverse the plain text
     for i in range(len(firmware)):
         char = firmware[i]
+        # Encrypt uppercase characters in plain text
         if (char.isupper()):
-            julius += chr((ord(char) + s - 65) % 26 + 65)
-        else:
+            julius += chr((ord(char) + s-65) % 26 + 65)
+        # Encrypt lowercase characters in plain text
+        elif (char.islower()):
             julius += chr((ord(char) + s - 97) % 26 + 97)
+        else:
+            julius += chr((ord(char)))
 
     # encrypting it with AES and then RSA + signing
     with open('secret_build_output.txt', 'rb') as keyLAND:
