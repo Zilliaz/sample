@@ -238,10 +238,6 @@ void load_firmware(void){
             // decrypting AES
             data_index += 1;
         }*/
-        rcv = uart_read(UART1, BLOCKING, &read);
-        frame_length = (int)rcv << 8;
-        rcv = uart_read(UART1, BLOCKING, &read);
-        frame_length += (int)rcv;
 
         char temp[240];
         for (int i = 0 ; i < 240; i++)
