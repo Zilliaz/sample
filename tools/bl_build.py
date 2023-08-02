@@ -46,6 +46,7 @@ def make_bootloader() -> bool:
     q.write(aesKEY)
     q.close()
 
+    # Don't actually need this; Only putting it in to avoid error
     cipher = AES.new(aesKEY, AES.MODE_CBC)
     IV = cipher.iv
     f = open('../bootloader/src/skeys.h', 'w') # storing iv in skeys.h
@@ -62,7 +63,6 @@ def make_bootloader() -> bool:
     f.write("\n")
     f.write("#endif")
     f.close()
-
     
     os.chdir(BOOTLOADER_DIR)
 

@@ -18,24 +18,38 @@ from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 
-def arrayize(binary_string):
-    return '{' + ','.join([hex(char) for char in binary_string]) + '}'
-    with open('./src/secrets.h', 'w') as f:
-        f.write("#ifndef SECRETS_H\n")
-        f.write("#define SECRETS_H\n")
-        f.write("const uint8_t IV[10] = " + arrayize(iv) + ";\n")
-        f.write("#endif")
+# Jayden's suggestion for sending IV
+# def arrayize(binary_string):
+#     return '{' + ','.join([hex(char) for char in binary_string]) + '}'
+#     with open('./src/secrets.h', 'w') as f:
+#         f.write("#ifndef SECRETS_H\n")
+#         f.write("#define SECRETS_H\n")
+#         f.write("const uint8_t IV[10] = " + arrayize(iv) + ";\n")
+#         f.write("#endif")
 
 def protect_firmware(infile, outfile, version, message):
-    LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    
     # Load firmware binary from infile
     with open(infile, 'rb') as fp:
         firmware = fp.read()
 
-    #casear cypher
+    # 26-Shift Caesar Cypher
+    # LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    # s = 26
+    # julius = ""
+    # # transverse the plain text
+    # for i in range(len(firmware)):
+    #     char = firmware[i]
+    #     # Encrypt uppercase characters in plain text
+    #     if (char.isupper()):
+    #         julius += chr((ord(char) + s-65) % 26 + 65)
+    #     # Encrypt lowercase characters in plain text
+    #     elif (char.islower()):
+    #         julius += chr((ord(char) + s - 97) % 26 + 97)
+    #     else:
+    #         julius += chr((ord(char)))
+    # firmware = julius
 
-    # encrypting it with AES and then RSA + signing
+    # AES Encryption:
     with open('secret_build_output.txt', 'rb') as keyLAND:
         keyAES = keyLAND.read()
 
@@ -47,26 +61,28 @@ def protect_firmware(infile, outfile, version, message):
         # generate iv
         cipher = AES.new(keyAES, AES.MODE_CBC)
         IV = cipher.iv
-        #arrayize(IV)
         ivy[i] = IV
-        
+        # arrayize(IV)
+
+        # pads last chunk to 240
         if len(chunk) < 240:
             padded = pad(chunk, 240)
         else:
             padded = chunk
         
+        # actually encrypts each chunk, adds to ct
         ct += cipher.encrypt(padded) # AESs
 
-    metadata = struct.pack('<HH', version, len(firmware))
+    metadata = struct.pack('<HH', version, len(firmware)) # Do we need to do len(ct) or len(firmware) for 'size'?
 
-    placeholder = len(chunk)
-    k =  open(outfile, 'wb+') #:D 我很想死，我非常想死
-    k.write(metadata) # should be metadata (4 bytes)
+    # Writes frame to fw_update.py
+    k = open(outfile, 'wb+')
+    k.write(metadata) # should be metadata (version/size) [4 bytes]
     for chunk in [ct[i:i + 240] for i in range(0, len(ct), 240)]: 
-        placeholder = len(chunk)     
-        k.write(placeholder.to_bytes()) # should be size, 2 
-        k.write(IV) # should be length 16
-        k.write(chunk) # 240 bytes
+        placeholder = len(chunk) # length
+        k.write(placeholder.to_bytes()) # writing over length [2 bytes] 
+        k.write(ivy[i]) # writing over IV [16 bytes]
+        k.write(chunk) # writing over ciphertext [240 bytes]
     k.close()
 
 if __name__ == '__main__':
