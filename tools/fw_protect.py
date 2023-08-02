@@ -18,6 +18,14 @@ from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 
+def arrayize(binary_string):
+    return '{' + ','.join([hex(char) for char in binary_string]) + '}'
+    with open('./src/secrets.h', 'w') as f:
+        f.write("#ifndef SECRETS_H\n")
+        f.write("#define SECRETS_H\n")
+        f.write("const uint8_t IV[10] = " + arrayize(iv) + ";\n")
+        f.write("#endif")
+
 def protect_firmware(infile, outfile, version, message):
     LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     
@@ -32,27 +40,18 @@ def protect_firmware(infile, outfile, version, message):
         keyAES = keyLAND.read()
 
     ct = b""
-    for chunk in [firmware[i:i + 16] for i in range(0, len(firmware), 16)]:
+    ivy_length = len(firmware) / 16 + 1
+    ivy = []
+    ivy = [{} for i in range (ivy_length)]
+    for chunk in [firmware[i:i + 240] for i in range(0, len(firmware), 240)]:
         # generate iv
         cipher = AES.new(keyAES, AES.MODE_CBC)
         IV = cipher.iv
-        f = open('../bootloader/src/skeys.h', 'w') # storing iv in skeys.h
-        f.write("#ifndef SKEYS_H")
-        f.write("\n")
-        f.write("#define SECRETS_H")
-        f.write("\n")
-        f.write("const uint8_t IV[16] = {")
-        for i in range (15):
-            f.write(str(IV[i]))
-            f.write(", ")
-        f.write(str(IV[15]))
-        f.write("};")
-        f.write("\n")
-        f.write("#endif")
-        f.close()
+        #arrayize(IV)
+        ivy[i] = IV
         
-        if len(chunk) < 16:
-            padded = pad(chunk, 16)
+        if len(chunk) < 240:
+            padded = pad(chunk, 240)
         else:
             padded = chunk
         

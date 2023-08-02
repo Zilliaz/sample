@@ -30,7 +30,7 @@ import socket
 from util import *
 
 RESP_OK = b"\x00"
-FRAME_SIZE = 256
+FRAME_SIZE = 258
 
 # testing ; ^ ;
 
