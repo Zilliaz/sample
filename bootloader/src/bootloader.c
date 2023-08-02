@@ -238,14 +238,23 @@ void load_firmware(void){
             // decrypting AES
             data_index += 1;
         }*/
-        char temp[16];
-        for (int i = 0 ; i < 16; i++)
+        rcv = uart_read(UART1, BLOCKING, &read);
+        frame_length = (int)rcv << 8;
+        rcv = uart_read(UART1, BLOCKING, &read);
+        frame_length += (int)rcv;
+
+        char temp[240];
+        for (int i = 0 ; i < 240; i++)
         {
             temp[i] = uart_read(UART1, BLOCKING, &read);
             //aes_decrypt(aesKEY, (char*)IV, (char*)data[i], 8);
             data_index++;
         }
-        aes_decrypt(aesKEY, (char*)IV, (char*)temp, 16);
+        aes_decrypt(aesKEY, (char*)IV, (char*)temp, 240);
+        
+
+
+
         
 
         // If we filed our page buffer, program it

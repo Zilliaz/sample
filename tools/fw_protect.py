@@ -26,26 +26,13 @@ def protect_firmware(infile, outfile, version, message):
         firmware = fp.read()
 
     #casear cypher
-    s = 26
-    julius = ""
-    # transverse the plain text
-    for i in range(len(firmware)):
-        char = firmware[i]
-        # Encrypt uppercase characters in plain text
-        if (char.isupper()):
-            julius += chr((ord(char) + s-65) % 26 + 65)
-        # Encrypt lowercase characters in plain text
-        elif (char.islower()):
-            julius += chr((ord(char) + s - 97) % 26 + 97)
-        else:
-            julius += chr((ord(char)))
 
     # encrypting it with AES and then RSA + signing
     with open('secret_build_output.txt', 'rb') as keyLAND:
         keyAES = keyLAND.read()
 
     ct = b""
-    for chunk in [julius[i:i + 16] for i in range(0, len(julius), 16)]:
+    for chunk in [firmware[i:i + 16] for i in range(0, len(firmware), 16)]:
         # generate iv
         cipher = AES.new(keyAES, AES.MODE_CBC)
         IV = cipher.iv
@@ -71,16 +58,16 @@ def protect_firmware(infile, outfile, version, message):
         
         ct += cipher.encrypt(padded) # AESs
 
-    metadata = struct.pack('<HH', version, len(julius))
+    metadata = struct.pack('<HH', version, len(firmware))
 
     placeholder = len(chunk)
     k =  open(outfile, 'wb+') #:D 我很想死，我非常想死
     k.write(metadata) # should be metadata (4 bytes)
-    for chunk in [ct[i:i + 238] for i in range(0, len(ct), 238)]: 
+    for chunk in [ct[i:i + 240] for i in range(0, len(ct), 240)]: 
         placeholder = len(chunk)     
         k.write(placeholder.to_bytes()) # should be size, 2 
         k.write(IV) # should be length 16
-        k.write(chunk) # 238 bytes
+        k.write(chunk) # 240 bytes
     k.close()
 
 if __name__ == '__main__':
