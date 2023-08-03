@@ -10,64 +10,11 @@ Firmware Bundle-and-Protect Tool
 import argparse
 import struct
 
-# new imports
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
 
 def protect_firmware(infile, outfile, version, message):
     # Load firmware binary from infile
     with open(infile, 'rb') as fp:
         firmware = fp.read()
-
-    # Reading in AES key
-    with open('secret_build_output.txt', 'rb') as fp:
-        aesKEY = fp.read()
-    
-    # Generating IV
-    cipher = AES.new(aesKEY, AES.MODE_CBC)
-    IV = cipher.iv
-
-    # Writing aesKEY, IV to skeys.h
-    f = open('../bootloader/src/skeys.h', 'w')
-    f.write("#ifndef SKEYS_H")
-    f.write("\n")
-    f.write("#define SKEYS_H")
-    f.write("\n")
-
-    f.write("const uint8_t aesKEY[16] = {")
-    for i in range (15):
-        f.write(hex(aesKEY[i]))
-        f.write(", ")
-    f.write(hex(aesKEY[15]))
-    f.write("};")
-    f.write("\n")
-
-    f.write("const uint8_t IV[16] = {")
-    for i in range (15):
-        f.write(hex(IV[i]))
-        f.write(", ")
-    f.write(hex(IV[15]))
-    f.write("};")
-    f.write("\n")
-
-    f.write("#endif")
-    f.close()
-
-    # Creating variable to store encrypted firmware
-    ct = b""
-
-    # Using for loop since AES only encrypts in multiples of 16-byte chunks
-    for chunk in [firmware[i:i + 16] for i in range(0, len(firmware), 16)]:
-        # Pads very last chunk
-        if len(chunk) < 16:
-            padded = pad(chunk, 16)
-        else:
-            padded = chunk
-
-        # Encrypts each 16-byte chunk, stores in 'ct'
-        ct += cipher.encrypt(padded)
-
-    firmware = ct # Since insecureExample uses variable 'firmware'
 
     # Append null-terminated message to end of firmware
     firmware_and_message = firmware + message.encode() + b'\00'
@@ -76,7 +23,7 @@ def protect_firmware(infile, outfile, version, message):
     metadata = struct.pack('<HH', version, len(firmware))
 
     # Append firmware and message to metadata
-    firmware_blob = metadata + IV + firmware_and_message
+    firmware_blob = metadata + firmware_and_message
 
     # Write firmware blob to outfile
     with open(outfile, 'wb+') as outfile:

@@ -15,10 +15,6 @@ import pathlib
 import shutil
 import subprocess
 
-# new imports
-from Crypto.Cipher import AES
-from Crypto.Random import get_random_bytes
-
 REPO_ROOT = pathlib.Path(__file__).parent.parent.absolute()
 BOOTLOADER_DIR = os.path.join(REPO_ROOT, "bootloader")
 
@@ -32,32 +28,6 @@ def copy_initial_firmware(binary_path: str):
 
 def make_bootloader() -> bool:
     # Build the bootloader from source.
-
-    # Create aesKEY
-    aesKEY = get_random_bytes(16)
-
-    # Store aesKEY in 'secret_build_output.txt' to use in fw_protect.py
-    q = open("secret_build_output.txt", 'wb') # Writes AES key into 'secret_build_output.txt'
-    q.write(aesKEY)
-    q.close()
-
-    # Store aesKEY in 'skeys.h' to use in bootloader.c
-    f = open('../bootloader/src/skeys.h', 'w') # Storing aesKEY in skeys.h
-    f.write("#ifndef SKEYS_H")
-    f.write("\n")
-    f.write("#define SKEYS_H")
-    f.write("\n")
-    f.write("const uint8_t aesKEY[16] = {")
-    for i in range (15):
-        f.write(hex(aesKEY[i]))
-        f.write(", ")
-    f.write(hex(aesKEY[15]))
-    f.write("};")
-    f.write("\n")
-    f.write("#endif")
-    f.close()
-
-    # Main has code that sends an initial IV; skipping for now (lines 49-64)
 
     os.chdir(BOOTLOADER_DIR)
 
