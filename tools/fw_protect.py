@@ -10,11 +10,38 @@ Firmware Bundle-and-Protect Tool
 import argparse
 import struct
 
+# new imports
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
 
 def protect_firmware(infile, outfile, version, message):
     # Load firmware binary from infile
     with open(infile, 'rb') as fp:
         firmware = fp.read()
+
+    # Reading in AES key
+    with open('secret_build_output.txt', 'rb') as fp:
+        aesKEY = fp.read()
+    
+    # Generating IV
+    cipher = AES.new(aesKEY, AES.MODE_CBC)
+    IV = cipher.iv
+
+    # Creating variable to store encrypted firmware
+    ct = b""
+
+    # Using for loop since AES only encrypts in multiples of 16-byte chunks
+    for chunk in [firmware[i:i + 16] for i in range(0, len(firmware), 16)]:
+        # Pads very last chunk
+        if len(chunk) < 16:
+            padded = pad(chunk, 16)
+        else:
+            padded = chunk
+
+        # Encrypts each 16-byte chunk, stores in 'ct'
+        ct += cipher.encrypt(padded)
+
+    firmware = ct # Since insecureExample uses variable 'firmware'
 
     # Append null-terminated message to end of firmware
     firmware_and_message = firmware + message.encode() + b'\00'
