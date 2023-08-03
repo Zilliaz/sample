@@ -56,6 +56,8 @@ def send_metadata(ser, metadata, debug=False):
     if resp != RESP_OK:
         raise RuntimeError("ERROR: Bootloader responded with {}".format(repr(resp)))
 
+def send_ivy(ser, ivy, debug=False):
+    ser.write(ivy)
 
 def send_frame(ser, frame, debug=False):
     ser.write(frame)  # Write the frame...
@@ -80,9 +82,11 @@ def update(ser, infile, debug):
         firmware_blob = fp.read()
 
     metadata = firmware_blob[:4]
-    firmware = firmware_blob[4:]
+    ivy = firmware_blob[4:20]
+    firmware = firmware_blob[20:]
 
     send_metadata(ser, metadata, debug=debug)
+    send_ivy(ser, ivy, debug=debug)
 
     for idx, frame_start in enumerate(range(0, len(firmware), FRAME_SIZE)):
         data = firmware[frame_start : frame_start + FRAME_SIZE]

@@ -27,6 +27,32 @@ def protect_firmware(infile, outfile, version, message):
     cipher = AES.new(aesKEY, AES.MODE_CBC)
     IV = cipher.iv
 
+    # Writing aesKEY, IV to skeys.h
+    f = open('../bootloader/src/skeys.h', 'w')
+    f.write("#ifndef SKEYS_H")
+    f.write("\n")
+    f.write("#define SKEYS_H")
+    f.write("\n")
+
+    f.write("const uint8_t aesKEY[16] = {")
+    for i in range (15):
+        f.write(hex(aesKEY[i]))
+        f.write(", ")
+    f.write(hex(aesKEY[15]))
+    f.write("};")
+    f.write("\n")
+
+    f.write("const uint8_t IV[16] = {")
+    for i in range (15):
+        f.write(hex(IV[i]))
+        f.write(", ")
+    f.write(hex(IV[15]))
+    f.write("};")
+    f.write("\n")
+
+    f.write("#endif")
+    f.close()
+
     # Creating variable to store encrypted firmware
     ct = b""
 
@@ -50,7 +76,7 @@ def protect_firmware(infile, outfile, version, message):
     metadata = struct.pack('<HH', version, len(firmware))
 
     # Append firmware and message to metadata
-    firmware_blob = metadata + firmware_and_message
+    firmware_blob = metadata + IV + firmware_and_message
 
     # Write firmware blob to outfile
     with open(outfile, 'wb+') as outfile:

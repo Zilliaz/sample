@@ -18,6 +18,12 @@
 // Application Imports
 #include "uart.h"
 
+// New Imports
+#include <stdio.h>
+#include <bearssl.h>
+#include <beaverssl.h>
+#include "skeys.h"
+
 // Forward Declarations
 void load_initial_firmware(void);
 void load_firmware(void);
@@ -220,11 +226,28 @@ void load_firmware(void){
         rcv = uart_read(UART1, BLOCKING, &read);
         frame_length += (int)rcv;
 
+        // Reading in IV
+        uint8_t IV[16];
+        for (int i = 0; i < 16; i++) {
+            IV[i] = uart_read(UART1, BLOCKING, &read);
+        }
+
         // Get the number of bytes specified
         for (int i = 0; i < frame_length; ++i){
             data[data_index] = uart_read(UART1, BLOCKING, &read);
             data_index += 1;
         } // for
+        
+        // Decrypting
+        // checking if works, temp
+        for (int i = 0; i < 25; i++) {
+            uart_write_str(UART2, data[i]);
+        }
+        aes_decrypt((char*)aesKEY, (char*)IV, (char*)data, 256);
+        // checking of iwkdsdsffds
+        for (int i = 0; i < 25; i++) {
+            uart_write_str(UART2, data[i]);
+        }
 
         // If we filed our page buffer, program it
         if (data_index == FLASH_PAGESIZE || frame_length == 0){
