@@ -32,7 +32,6 @@ from util import *
 RESP_OK = b"\x00"
 FRAME_SIZE = 256
 
-# testing ; ^ ;
 
 def send_metadata(ser, metadata, debug=False):
     version, size = struct.unpack_from("<HH", metadata)
@@ -60,8 +59,7 @@ def send_metadata(ser, metadata, debug=False):
 
 def send_frame(ser, frame, debug=False):
     ser.write(frame)  # Write the frame...
-    print(frame)
-    
+
     if debug:
         print_hex(frame)
 
@@ -82,10 +80,8 @@ def update(ser, infile, debug):
         firmware_blob = fp.read()
 
     metadata = firmware_blob[:4]
-    iv = firmware_blob[4:20]
-    firmware = firmware_blob[20:]
+    firmware = firmware_blob[4:]
 
-    time.sleep(0.1)
     send_metadata(ser, metadata, debug=debug)
 
     for idx, frame_start in enumerate(range(0, len(firmware), FRAME_SIZE)):
