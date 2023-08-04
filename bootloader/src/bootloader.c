@@ -14,14 +14,12 @@
 
 // Library Imports
 #include <string.h>
-#include <stdio.h>
-#include <bearssl.h>
-#include <beaverssl.h>
 
 // Application Imports
 #include "uart.h"
 
-// Header file
+// New imports
+#include <beaverssl.h>
 #include "skeys.h"
 
 // Forward Declarations
@@ -44,14 +42,16 @@ long program_flash(uint32_t, unsigned char *, unsigned int);
 #define UPDATE ((unsigned char)'U')
 #define BOOT ((unsigned char)'B')
 
+
+#define FW_VERSION_ADDRESS ((uint16_t *)METADATA_BASE)
+#define FW_SIZE_ADDRESS ((uint16_t *)(METADATA_BASE + 2))
+
 // Firmware v2 is embedded in bootloader
 // Read up on these symbols in the objcopy man page (if you want)!
 extern int _binary_firmware_bin_start;
 extern int _binary_firmware_bin_size;
 
 // Device metadata
-uint16_t *fw_version_address = (uint16_t *)METADATA_BASE;
-uint16_t *fw_size_address = (uint16_t *)(METADATA_BASE + 2);
 uint8_t *fw_release_message_address;
 void uart_write_hex_bytes(uint8_t uart, uint8_t * start, uint32_t len);
 
@@ -197,7 +197,7 @@ void load_firmware(void){
     nl(UART2);
 
     // Compare to old version and abort if older (note special case for version 0).
-    uint16_t old_version = *fw_version_address;
+    uint16_t old_version = *FW_VERSION_ADDRESS;
 
     if (version != 0 && version < old_version){
         uart_write(UART1, ERROR); // Reject the metadata.
@@ -218,7 +218,10 @@ void load_firmware(void){
     uart_write(UART1, OK); // Acknowledge the metadata.
 
     /* Loop here until you can get all your characters and stuff */
-    char aesKEY[16];
+
+    // Creating 16-byte array named chunk outside of while loop
+    char chunk[16];
+    int chunk_index = 0;
     while (1){
 
         // Get two bytes for the length.
@@ -227,31 +230,35 @@ void load_firmware(void){
         rcv = uart_read(UART1, BLOCKING, &read);
         frame_length += (int)rcv;
 
-
-        // DECRYPTINGGGG
-
         // Get the number of bytes specified
-        /*
         for (int i = 0; i < frame_length; ++i){
+            // Reads in encrypted firmware into data, 1 byte at a time
             data[data_index] = uart_read(UART1, BLOCKING, &read);
+            
+            // Inputs encrypted firmware into 16 byte chunk
+            chunk[chunk_index] = data[data_index];
 
-            // decrypting AES
-            data_index += 1;
-        }*/
-
-        char temp[240];
-        for (int i = 0 ; i < 240; i++)
-        {
-            temp[i] = uart_read(UART1, BLOCKING, &read);
-            //aes_decrypt(aesKEY, (char*)IV, (char*)data[i], 8);
+            // Incrementing here cuz its convenient
             data_index++;
-        }
-        aes_decrypt(aesKEY, (char*)IV, (char*)temp, 240);
-        
+            chunk_index++;
 
+            // Checking if chunk has been filled yet, and decrypting if so (AES decrypts in 16 byte chunks)
+            if (data_index % 16 == 0) {
+                chunk_index = 0; // Resetting indexing
+                aes_decrypt((char*)aesKEY, (char*)IV, (char*)chunk, 16); // Decryption of chunk
 
+                // Inputting decrypted chunk back into data
+                for (int j = 0; j < 16; j++) {
+                    if (chunk[j] != 0x06) {
+                        data[data_index - 16 + j] = chunk[j]; // THIS IS WRONG; TO FIX
+                    }
+                    //uart_write_hex(UART0, data[data_index - 16 + j]); // For testing purposes, will delete
+                }
+                uart_write_str(UART0, (char*)data);
+            }
+        } // for
 
-        
+        nl(UART0); // For testing purposes, will delete
 
         // If we filed our page buffer, program it
         if (data_index == FLASH_PAGESIZE || frame_length == 0){
@@ -345,7 +352,7 @@ long program_flash(uint32_t page_addr, unsigned char *data, unsigned int data_le
 
 void boot_firmware(void){
     // compute the release message address, and then print it
-    uint16_t fw_size = *fw_size_address;
+    uint16_t fw_size = *FW_SIZE_ADDRESS;
     fw_release_message_address = (uint8_t *)(FW_BASE + fw_size);
     uart_write_str(UART2, (char *)fw_release_message_address);
 

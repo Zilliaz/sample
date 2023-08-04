@@ -14,14 +14,10 @@ import os
 import pathlib
 import shutil
 import subprocess
-import json
-from base64 import b64encode
+
+# New imports
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
 from Crypto.Random import get_random_bytes
-from Crypto.Signature import pkcs1_15
-from Crypto.Hash import SHA256
-from Crypto.PublicKey import RSA
 
 REPO_ROOT = pathlib.Path(__file__).parent.parent.absolute()
 BOOTLOADER_DIR = os.path.join(REPO_ROOT, "bootloader")
@@ -37,38 +33,54 @@ def copy_initial_firmware(binary_path: str):
 def make_bootloader() -> bool:
     # Build the bootloader from source.
 
+    # Creating aesKEY
     aesKEY = get_random_bytes(16)
-    byte_aesKEY = []
-    byte_aesKEY = [0 in range(16)]
 
-    # sending keys to secret_build_output.txt
-    q = open("secret_build_output.txt", 'wb') # does this need to be wb?
+    # Generate IV
+    cipher = AES.new(aesKEY, AES.MODE_CBC)
+    IV = cipher.iv
+
+    # Sending aesKEY to 'secret_build_output.txt' for 'fw_protect.py'
+    q = open("secret_build_output.txt", 'wb')
     q.write(aesKEY)
     q.close()
 
-    cipher = AES.new(aesKEY, AES.MODE_CBC)
-    IV = cipher.iv
-    f = open('../bootloader/src/skeys.h', 'w') # storing iv in skeys.h
+    # Sending IV to 'secret_IV.txt' for 'fw_protect.py'
+    s = open("secret_IV.txt", 'wb')
+    s.write(IV)
+    s.close()
+
+    # Sending aesKEY and IV to 'skeys.h' for 'bootloader.c'
+    f = open('../bootloader/src/skeys.h', 'w')
+
     f.write("#ifndef SKEYS_H")
     f.write("\n")
     f.write("#define SECRETS_H")
     f.write("\n")
+
+    f.write("const uint8_t aesKEY[16] = {")
+    for i in range (15):
+        f.write(hex(aesKEY[i]))
+        f.write(", ")
+    f.write(hex(aesKEY[15]))
+    f.write("};")
+    f.write("\n")
+
     f.write("const uint8_t IV[16] = {")
     for i in range (15):
-        f.write(str(IV[i]))
+        f.write(hex(IV[i]))
         f.write(", ")
-    f.write(str(IV[15]))
+    f.write(hex(IV[15]))
     f.write("};")
     f.write("\n")
     f.write("#endif")
+
     f.close()
 
-    
     os.chdir(BOOTLOADER_DIR)
 
     subprocess.call("make clean", shell=True)
-    status = subprocess.call(f'make AES_KEY={(aesKEY)}', shell=True)#macros
-    
+    status = subprocess.call("make")
 
     # Return True if make returned 0, otherwise return False.
     return status == 0

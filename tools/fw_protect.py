@@ -9,67 +9,52 @@ Firmware Bundle-and-Protect Tool
 """
 import argparse
 import struct
-import json
-from base64 import b64decode
+
+# New imports
 from Crypto.Cipher import AES
-from Crypto.Util.Padding import unpad
 from Crypto.Util.Padding import pad
-from Crypto.Signature import pkcs1_15
-from Crypto.Hash import SHA256
-from Crypto.PublicKey import RSA
+
 
 def protect_firmware(infile, outfile, version, message):
-    #LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    
     # Load firmware binary from infile
     with open(infile, 'rb') as fp:
         firmware = fp.read()
 
-    #casear cypher
+    # Loads in aesKEY from 'secret_build_output.txt'
+    with open('secret_build_output.txt', 'rb') as fq:
+        aesKEY = fq.read()
 
-    # encrypting it with AES and then RSA + signing
-    with open('secret_build_output.txt', 'rb') as keyLAND:
-        keyAES = keyLAND.read()
+    # Loads in IV from 'secret_IV.txt'
+    with open('secret_IV.txt', 'rb') as fs:
+        IV = fs.read()
 
-    ct = b""
-    for chunk in [firmware[i:i + 16] for i in range(0, len(firmware), 16)]:
-        # generate iv
-        cipher = AES.new(keyAES, AES.MODE_CBC)
-        IV = cipher.iv
-        f = open('../bootloader/src/skeys.h', 'w') # storing iv in skeys.h
-        f.write("#ifndef SKEYS_H")
-        f.write("\n")
-        f.write("#define SECRETS_H")
-        f.write("\n")
-        f.write("const uint8_t IV[16] = {")
-        for i in range (15):
-            f.write(str(IV[i]))
-            f.write(", ")
-        f.write(str(IV[15]))
-        f.write("};")
-        f.write("\n")
-        f.write("#endif")
-        f.write("\n")
-        f.close()
-        
+    # Append null-terminated message to end of firmware
+    firmware_and_message = firmware + message.encode() + b'\00'
+
+    # Encrypting firmware into ct
+    ct = b"" # Variable for encrypted firmware
+    padded_chunk = b""
+    for chunk in [firmware_and_message[i:i + 16] for i in range(0, len(firmware_and_message), 16)]:
+        cipher = AES.new(aesKEY, AES.MODE_CBC, iv = IV)
+
+        # Padding chunks since AES only encrypts in bytes of 16
         if len(chunk) < 16:
-            padded = pad(chunk, 16)
+            padded_chunk = pad(chunk, 16)
         else:
-            padded = chunk
-        
-        ct += cipher.encrypt(padded) # AESs
+            padded_chunk = chunk
 
+        ct += cipher.encrypt(padded_chunk)
+
+    # Pack version and size into two little-endian shorts
     metadata = struct.pack('<HH', version, len(firmware))
 
-    placeholder = len(chunk)
-    k =  open(outfile, 'wb+') #:D 我很想死，我非常想死
-    k.write(metadata) # should be metadata (4 bytes)
-    for chunk in [ct[i:i + 240] for i in range(0, len(ct), 240)]: 
-        placeholder = len(chunk)     
-        k.write(placeholder.to_bytes()) # should be size, 2 
-        k.write(IV) # should be length 16
-        k.write(chunk) # 240 bytes
-    k.close()
+    # Append firmware and message to metadata
+    firmware_blob = metadata + ct
+
+    # Write firmware blob to outfile
+    with open(outfile, 'wb+') as outfile:
+        outfile.write(firmware_blob)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Firmware Update Tool')
@@ -80,19 +65,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     protect_firmware(infile=args.infile, outfile=args.outfile, version=int(args.version), message=args.message)
-"""
-⢀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⠀⣠⣤⣶⣶
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀⠀⠀⢰⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣧⣀⣀⣾⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⡏⠉⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣿
-⣿⣿⣿⣿⣿⣿⠀⠀⠀⠈⠛⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠛⠉⠁⠀⣿
-⣿⣿⣿⣿⣿⣿⣧⡀⠀⠀⠀⠀⠙⠿⠿⠿⠻⠿⠿⠟⠿⠛⠉⠀⠀⠀⠀⠀⣸⣿
-⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⠏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠠⣴⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⡟⠀⠀⢰⣹⡆⠀⠀⠀⠀⠀⠀⣭⣷⠀⠀⠀⠸⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⠃⠀⠀⠈⠉⠀⠀⠤⠄⠀⠀⠀⠉⠁⠀⠀⠀⠀⢿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⢾⣿⣷⠀⠀⠀⠀⡠⠤⢄⠀⠀⠀⠠⣿⣿⣷⠀⢸⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⡀⠉⠀⠀⠀⠀⠀⢄⠀⢀⠀⠀⠀⠀⠉⠉⠁⠀⠀⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣧⠀⠀⠀⠀⠀⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣿
-"""
